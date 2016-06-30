@@ -45,7 +45,6 @@ int main()
             
             if(entityType == myTeamId)
             {
-                cerr << "hello" << endl;
                 busterInfo.push_back(currentInfo);
                 
             }
@@ -63,10 +62,12 @@ int main()
 
             // Write an action using cout. DON'T FORGET THE "<< endl"
             // To debug: cerr << "Debug messages..." << endl;
-            //cerr << "size of buster vector: " << busterInfo.size() << endl;
+
             //cerr << "Position of buster " << busterInfo[0][0] << "is" << busterInfo[0][1] << " " << busterInfo[0][2] << endl;
             int busterX = busterInfo[i][1];
             int busterY = busterInfo[i][2];
+            
+            bool givenCommand = false;
             
             
             //first checking if the buster has a ghost, if he does, send him to the base to release it
@@ -77,11 +78,13 @@ int main()
                     if(sqrt( (0 - busterX) * (0 - busterX) + (0 - busterY) * (0 - busterY) ) < RELEASE_RANGE)
                     {
                         cout << "RELEASE" << endl;
+                        givenCommand = true;
                         continue;
                     }
                     else
                     {
                         cout << "MOVE 0 0" << endl;  
+                        givenCommand = true;
                         continue;
                     }
                 }
@@ -90,11 +93,13 @@ int main()
                     if(sqrt((16000-busterX)*(16000-busterX) + (9000-busterY)*(9000-busterY)) < RELEASE_RANGE)
                     {
                         cout << "RELEASE" << endl;
+                        givenCommand = true;
                         continue;
                     }
                     else
                     {
                         cout << "MOVE 16000 9000" << endl;
+                        givenCommand = true;
                         continue;
                     }
                 }
@@ -106,7 +111,7 @@ int main()
                 int ghostX = ghostInfo[j][1];
                 int ghostY = ghostInfo[j][2];
                 bool isBustedGhost = false;
-                float dist = sqrt((ghosX-busterX)*(ghostX-busterX) + (ghostY - busterY)*(ghostY-busterY));
+                float dist = sqrt((ghostX-busterX)*(ghostX-busterX) + (ghostY - busterY)*(ghostY-busterY));
                 
                 //check that no other buster already has this ghost
                 for (int i = 0; i < bustersPerPlayer; i++)
@@ -121,17 +126,62 @@ int main()
                 if(!isBustedGhost && dist > MIN_BUST_RANGE && dist < MAX_BUST_RANGE)
                 {
                     cout << "BUST " << ghostId << endl;
+                    givenCommand = true;
                     break;
                 }
                 //if the ghost is not within range, chase it, MOVE to it
                 else if (dist > MAX_BUST_RANGE)
                 {
                     cout << "MOVE " << ghostX << " " << ghostY << endl;
+                    givenCommand = true;
                     break;
                 }
                 
             }
             
+            //If not ghosts are seen at this point, then just go out to patrol
+            bool 
+            if(!givenCommand)
+            {
+                if(myTeamId == 0)
+                {
+                    if(i == 0)
+                    {
+                        cout << "MOVE 16000 4000" << endl;
+                    }
+                    else if (i == 1)
+                    {
+                        cout << "MOVE 16000 9000" << endl;
+                    }
+                    else if (i == 2)
+                    {
+                        cout << "MOVE 10000 9000" << endl;
+                    }
+                    else if (i == 3)
+                    {
+                        cout << "MOVE 2000 9000" << endl;
+                    }
+                }
+                else
+                {
+                    if(i == 0)
+                    {
+                        cout << "MOVE 0 0" << endl;
+                    }
+                    else if (i == 1)
+                    {
+                        cout << "MOVE 16000 9000" << endl;
+                    }
+                    else if (i == 2)
+                    {
+                        cout << "MOVE 10000 9000" << endl;
+                    }
+                    else if (i == 3)
+                    {
+                        cout << "MOVE 2000 9000" << endl;
+                    }
+                }
+            }
             
             /*
             If there is a ghost near the busters, MOVE closest buster to it,
@@ -146,7 +196,6 @@ int main()
             */
             
 
-            cout << "MOVE 8000 4500" << endl; // MOVE x y | BUST id | RELEASE
         }
     }
 }
