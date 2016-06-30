@@ -20,13 +20,21 @@ int main()
     const int MIN_BUST_RANGE = 900;
     const int MAX_BUST_RANGE = 1760;
     const int RELEASE_RANGE = 1600;
+    const int MAX_STUN_RANGE = 1760;
     
-    
+   /* 
     bool endOfPatrol1 = false;
     bool endOfPatrol2 = false;
     bool endOfPatrol3 = false;
     bool endOfPatrol4 = false;
     bool endOfPatrol5 = false;
+    */
+    
+    //a stun timer for each potential buster
+    int usedStun[] = {0,0,0,0,0};
+    
+    //memory for seen ghosts
+    vector< vector<int> >potentialGhostLocations;
 
     // game loop
     while (1) {
@@ -35,6 +43,8 @@ int main()
         vector< vector<int> > ghostInfo;
         vector< vector<int> > busterInfo;
         vector< vector<int> > enemyInfo;
+        
+        
         for (int i = 0; i < entities; i++) {
             int entityId; // buster id or ghost id
             int x;
@@ -64,11 +74,15 @@ int main()
             }
 
         }
+        
+        
         for (int i = 0; i < bustersPerPlayer; i++) {
 
-            // Write an action using cout. DON'T FORGET THE "<< endl"
-            // To debug: cerr << "Debug messages..." << endl;
-
+            //let stun timers reset over time
+            if(usedStun[i] > 0)
+            {
+                usedStun[i]--;
+            }
             //cerr << "Position of buster " << busterInfo[0][0] << "is" << busterInfo[0][1] << " " << busterInfo[0][2] << endl;
             int busterX = busterInfo[i][1];
             int busterY = busterInfo[i][2];
@@ -78,6 +92,7 @@ int main()
             //first checking if the buster has a ghost, if he does, send him to the base to release it
             if(busterInfo[i][3] == 1)
             {
+                //cerr << "current buster value: " << busterInfo[i][4] << endl;
                 if(myTeamId == 0)
                 {
                     if(sqrt( (0 - busterX) * (0 - busterX) + (0 - busterY) * (0 - busterY) ) < RELEASE_RANGE)
@@ -110,13 +125,44 @@ int main()
                 }
             }
             
+            if(givenCommand)
+            {
+                continue;
+            }
+            
+            //next check if I can stun an opposing player
+            for(int k = 0; k < enemyInfo.size();k++)
+            {
+                int enemyId = enemyInfo[k][0];
+                int enemyState = enemyInfo[k][3];
+                int enemyX = enemyInfo[k][1];
+                int enemyY = enemyInfo[k][2];
+                
+                float dist = sqrt((enemyX-busterX)*(enemyX-busterX) + (enemyY-busterY)*(enemyY-busterY));
+                
+                if(!usedStun[i] && enemyState != 2 && dist < MAX_STUN_RANGE)
+                {
+                    usedStun[i] = 20;
+                    cout << "STUN " << enemyId << endl;
+                    givenCommand = true;
+                    break;
+                }
+                
+            }
+            
+            if(givenCommand)
+            {
+                continue;
+            }
+            
+            //next go for ghosts
             for(int j = 0; j < ghostInfo.size();j++)
             {
                 int ghostId = ghostInfo[j][0];
                 int ghostX = ghostInfo[j][1];
                 int ghostY = ghostInfo[j][2];
                 bool isBustedGhost = false;
-                float dist = sqrt((ghostX-busterX)*(ghostX-busterX) + (ghostY - busterY)*(ghostY-busterY));
+                float dist = sqrt((ghostX-busterX)*(ghostX-busterX) + (ghostY-busterY)*(ghostY-busterY));
                 
                 //check that no other buster already has this ghost
                 for (int i = 0; i < bustersPerPlayer; i++)
@@ -135,7 +181,7 @@ int main()
                     break;
                 }
                 //if the ghost is not within range, chase it, MOVE to it
-                else if (dist > MAX_BUST_RANGE)
+                else if (!isBustedGhost && dist > MAX_BUST_RANGE)
                 {
                     cout << "MOVE " << ghostX << " " << ghostY << endl;
                     givenCommand = true;
@@ -144,8 +190,64 @@ int main()
                 
             }
             
+            if(givenCommand)
+            {
+                continue;
+            }
+            
+            //if no command is given yet, camp the enemy grounds
+            if(!givenCommand)
+            {
+                if(myTeamId == 0)
+                {
+                    if(i == 0)
+                    {
+                        cout << "MOVE 13500 5500" << endl;
+                    }
+                    if(i == 1)
+                    {
+                        cout << "MOVE 12000 7000" << endl;
+                    }
+                    if(i == 2)
+                    {
+                        cout << "MOVE 12000 6000" << endl;
+                    }
+                    if(i == 3)
+                    {
+                        cout << "MOVE 10000 7000" << endl;
+                    }
+                    if(i == 4)
+                    {
+                        cout << "MOVE 14000 4000" << endl;
+                    }
+                }
+                else
+                {
+                    if(i == 0)
+                    {
+                        cout << "MOVE 2000 3000" << endl;
+                    }
+                    if(i == 1)
+                    {
+                        cout << "MOVE 4500 1500" << endl;
+                    }
+                    if(i == 2)
+                    {
+                        cout << "MOVE 2000 1000" << endl;
+                    }
+                    if(i == 3)
+                    {
+                        cout << "MOVE 2000 5000" << endl;
+                    }
+                    if(i == 4)
+                    {
+                        cout << "MOVE 6000 1000" << endl;
+                    }
+                }
+            }
+            
+            /*
             //If not ghosts are seen at this point, then just go out to patrol
-
             if(!givenCommand)
             {
                 if(myTeamId == 0)
@@ -346,7 +448,7 @@ int main()
                     }
                 }
             }
-            
+            */
             /*
             If there is a ghost near the busters, MOVE closest buster to it,
                 then once close enough, BUST
