@@ -19,8 +19,14 @@ int main()
     
     const int MIN_BUST_RANGE = 900;
     const int MAX_BUST_RANGE = 1760;
-    
     const int RELEASE_RANGE = 1600;
+    
+    
+    bool endOfPatrol1 = false;
+    bool endOfPatrol2 = false;
+    bool endOfPatrol3 = false;
+    bool endOfPatrol4 = false;
+    bool endOfPatrol5 = false;
 
     // game loop
     while (1) {
@@ -68,8 +74,7 @@ int main()
             int busterY = busterInfo[i][2];
             
             bool givenCommand = false;
-            
-            
+
             //first checking if the buster has a ghost, if he does, send him to the base to release it
             if(busterInfo[i][3] == 1)
             {
@@ -140,45 +145,204 @@ int main()
             }
             
             //If not ghosts are seen at this point, then just go out to patrol
-            bool 
+
             if(!givenCommand)
             {
                 if(myTeamId == 0)
                 {
                     if(i == 0)
                     {
-                        cout << "MOVE 16000 4000" << endl;
+                        if(busterX == 16000 && busterY == 6000)
+                        {
+                            endOfPatrol1 = true;
+                        }
+                        else if (busterX == 3000 && busterY == 0)
+                        {
+                            endOfPatrol1 = false;
+                        }
+                        if(!endOfPatrol1)
+                        {
+                            cout << "MOVE 16000 6000" << endl;
+                        }
+                        else
+                        {
+                            cout << "MOVE 3000 0" << endl;
+                        }
                     }
                     else if (i == 1)
                     {
-                        cout << "MOVE 16000 9000" << endl;
+                        if(busterX == 12000 && busterY == 9000)
+                        {
+                            endOfPatrol1 = true;
+                        }
+                        else if (busterX == 0 && busterY == 2000)
+                        {
+                            endOfPatrol1 = false;
+                        }
+                        if(!endOfPatrol1)
+                        {
+                            cout << "MOVE 12000 9000" << endl;
+                        }
+                        else
+                        {
+                            cout << "MOVE 0 2000" << endl;
+                        }
                     }
                     else if (i == 2)
                     {
-                        cout << "MOVE 10000 9000" << endl;
+                        if(busterX == 16000 && busterY == 2000)
+                        {
+                            endOfPatrol1 = true;
+                        }
+                        else if (busterX == 8000 && busterY == 0)
+                        {
+                            endOfPatrol1 = false;
+                        }
+                        if(!endOfPatrol1)
+                        {
+                            cout << "MOVE 16000 2000" << endl;
+                        }
+                        else
+                        {
+                            cout << "MOVE 8000 0" << endl;
+                        }
                     }
                     else if (i == 3)
                     {
-                        cout << "MOVE 2000 9000" << endl;
+                        if(busterX == 6000 && busterY == 9000)
+                        {
+                            endOfPatrol1 = true;
+                        }
+                        else if (busterX == 13000 && busterY == 0)
+                        {
+                            endOfPatrol1 = false;
+                        }
+                        if(!endOfPatrol1)
+                        {
+                            cout << "MOVE 6000 9000" << endl;
+                        }
+                        else
+                        {
+                            cout << "MOVE 13000 0" << endl;
+                        }
+                    }
+                    else if (i == 4)
+                    {
+                        if(busterX == 2000 && busterY == 9000)
+                        {
+                            endOfPatrol1 = true;
+                        }
+                        else if (busterX == 0 && busterY == 3000)
+                        {
+                            endOfPatrol1 = false;
+                        }
+                        if(!endOfPatrol1)
+                        {
+                            cout << "MOVE 2000 9000" << endl;
+                        }
+                        else
+                        {
+                            cout << "MOVE 0 3000" << endl;
+                        }
                     }
                 }
+                
                 else
                 {
                     if(i == 0)
                     {
-                        cout << "MOVE 0 0" << endl;
+                        if(busterX == 4000 && busterY == 0)
+                        {
+                            endOfPatrol1 = true;
+                        }
+                        else if (busterX == 16000 && busterY == 4000)
+                        {
+                            endOfPatrol1 = false;
+                        }
+                        if(!endOfPatrol1)
+                        {
+                            cout << "MOVE 4000 0" << endl;
+                        }
+                        else
+                        {
+                            cout << "MOVE 16000 4000" << endl;
+                        }
                     }
                     else if (i == 1)
                     {
-                        cout << "MOVE 16000 9000" << endl;
+                        if(busterX == 0 && busterY == 4000)
+                        {
+                            endOfPatrol1 = true;
+                        }
+                        else if (busterX == 12000 && busterY == 9000)
+                        {
+                            endOfPatrol1 = false;
+                        }
+                        if(!endOfPatrol1)
+                        {
+                            cout << "MOVE 0 4000" << endl;
+                        }
+                        else
+                        {
+                            cout << "MOVE 12000 9000" << endl;
+                        }
                     }
                     else if (i == 2)
                     {
-                        cout << "MOVE 10000 9000" << endl;
+                        if(busterX == 8000 && busterY == 0)
+                        {
+                            endOfPatrol1 = true;
+                        }
+                        else if (busterX == 8000 && busterY == 9000)
+                        {
+                            endOfPatrol1 = false;
+                        }
+                        if(!endOfPatrol1)
+                        {
+                            cout << "MOVE 8000 0" << endl;
+                        }
+                        else
+                        {
+                            cout << "MOVE 8000 9000" << endl;
+                        }
                     }
                     else if (i == 3)
                     {
-                        cout << "MOVE 2000 9000" << endl;
+                        if(busterX == 0 && busterY == 6500)
+                        {
+                            endOfPatrol1 = true;
+                        }
+                        else if (busterX == 5500 && busterY == 9000)
+                        {
+                            endOfPatrol1 = false;
+                        }
+                        if(!endOfPatrol1)
+                        {
+                            cout << "MOVE 0 6500" << endl;
+                        }
+                        else
+                        {
+                            cout << "MOVE 5500 9000" << endl;
+                        }
+                    }
+                    else if (i == 4)
+                    {
+                        if(busterX == 11000 && busterY == 0)
+                        {
+                            endOfPatrol1 = true;
+                        }
+                        else if (busterX == 16000 && busterY == 2500)
+                        {
+                            endOfPatrol1 = false;
+                        }
+                        if(!endOfPatrol1)
+                        {
+                            cout << "MOVE 11000 0" << endl;
+                        }
+                        else
+                        {
+                            cout << "MOVE 16000 2500" << endl;
+                        }
                     }
                 }
             }
@@ -193,6 +357,12 @@ int main()
             
             If a ghost is captured, move the buster toward the base
                 if within radius 1600 radius, RELEASE
+            
+            TODO:
+            After solving for patrol
+            solve for sending an extra buster to bust a ghost that one of my busters
+                is fighting over with an enemy
+            
             */
             
 
