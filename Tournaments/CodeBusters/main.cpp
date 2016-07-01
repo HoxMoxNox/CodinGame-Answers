@@ -51,7 +51,6 @@ int main()
     while (1) {
         
         turn++;
-        cerr << "turn: " << turn << endl;
         
         int entities; // the number of busters and ghosts visible to you
         cin >> entities; cin.ignore();
@@ -212,6 +211,8 @@ int main()
             }
             
             //next check if I can stun an opposing player
+            //prioritize those with ghosts
+            sort(enemyInfo.begin(), enemyInfo.end(), [](const std::vector< int >& a, const std::vector< int >& b){ return a[3] == 1; } );
             for(int k = 0; k < enemyInfo.size();k++)
             {
                 int enemyId = enemyInfo[k][0];
@@ -446,7 +447,7 @@ int main()
                             cout << "MOVE 1200 2600 Camp" << endl;
                             if(busterX == 1200 && busterY == 2600)
                             {
-                                patrolModes[i] == 0;
+                                patrolModes[i] = 0;
                             }
                         }                        
                     }
@@ -539,11 +540,33 @@ int main()
                     //camper
                     else if(i == 4)
                     {
-                        cout << "MOVE 6000 1000 Camp" << endl;
+                        if(patrolModes[i] == 0)
+                        {
+                            cout << "MOVE 3000 1000 Camp" << endl;
+                            if(busterX == 3000 && busterY == 1000)
+                            {
+                                patrolModes[i] = 1;
+                            }
+                        }
+                        else if(patrolModes[i] == 1)
+                        {
+                            cout << "MOVE 2500 1500 Camp" << endl;
+                            if(busterX == 2500 && busterY == 1500)
+                            {
+                                patrolModes[i] = 2;
+                            }
+                        }
+                        else if(patrolModes[i] == 2)
+                        {
+                            cout << "MOVE 1500 2600 Camp" << endl;
+                            if(busterX == 1500 && busterY == 2600)
+                            {
+                                patrolModes[i] == 0;
+                            }                        
+                        }
                     }
                 }
             }
-            
         }
     }
 }
