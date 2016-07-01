@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <map>
+#include <utility>  
 
 using namespace std;
 
@@ -37,6 +39,10 @@ int main()
     //this counter saves how many turns a certain buster has been chasing an enemy buster
     int chaseTime[] = {0,0,0,0,0};
     
+    //safe travelling when releasing, have the buster go to the edge then to base
+    //to try and avoid the enemy campers
+    int safeTravel[] = {0,0,0,0,0};
+    
     //score keeping
     int personalScore = 0;
     int potentialEnemyScore = 0;
@@ -45,6 +51,7 @@ int main()
     while (1) {
         
         turn++;
+        cerr << "turn: " << turn << endl;
         
         int entities; // the number of busters and ghosts visible to you
         cin >> entities; cin.ignore();
@@ -94,43 +101,107 @@ int main()
             //cerr << "Position of buster " << busterInfo[0][0] << "is" << busterInfo[0][1] << " " << busterInfo[0][2] << endl;
             int busterX = busterInfo[i][1];
             int busterY = busterInfo[i][2];
-            
+        
             bool givenCommand = false;
 
             //first checking if the buster has a ghost, if he does, send him to the base to release it
+            // Add a safe travel by sending the buster to an edge then to the base, after a certain # of turns
             if(busterInfo[i][3] == 1)
             {
-                //cerr << "current buster value: " << busterInfo[i][4] << endl;
                 if(myTeamId == 0)
                 {
+                    float distToTopWall = sqrt((8000 - busterX) * (8000 - busterX) + (0 - busterY) * (0 - busterY));
+                    float distToLeftWall = sqrt((0 - busterX) * (0 - busterX) + (6500 - busterY) * (6500 - busterY));
+                    
                     if(sqrt( (0 - busterX) * (0 - busterX) + (0 - busterY) * (0 - busterY) ) < RELEASE_RANGE)
                     {
                         cout << "RELEASE Releasing" << endl;
                         personalScore++;
+                        safeTravel[i] = 0;
                         givenCommand = true;
                         continue;
                     }
                     else
                     {
-                        cout << "MOVE 0 0 Moving to base" << endl;  
-                        givenCommand = true;
-                        continue;
+                        //go to the closest wall, and then go to base along the wall to try and avoid camps
+                        if(turn > 50 && !safeTravel[i])
+                        {
+                            if(distToTopWall < distToLeftWall)
+                            {
+                                if(busterX == 8000 && busterY == 0)
+                                {
+                                    safeTravel[i] = 1;
+                                }
+                                cout << "MOVE 8000 0 Moving to safe zone" << endl;
+                                givenCommand = true;
+                                continue;                                
+                            }
+                            else
+                            {
+                                if(busterX == 0 && busterY == 6500)
+                                {
+                                    safeTravel[i] = 1;
+                                }                                
+                                cout << "MOVE 0 6500 Moving to safe zone" << endl;
+                                givenCommand = true;
+                                continue;                                
+                            }
+                        }
+                        else
+                        {
+                            cout << "MOVE 0 0 Moving to base" << endl;  
+                            givenCommand = true;
+                            continue;
+                        }
                     }
                 }
                 else
                 {
+                    float distToRightWall = sqrt((16000 - busterX) * (16000 - busterX) + (2500 - busterY) * (2500 - busterY));
+                    float distToBottomWall = sqrt((8000 - busterX) * (8000 - busterX) + (9000 - busterY) * (9000 - busterY));
+                    
+                    
                     if(sqrt((16000-busterX)*(16000-busterX) + (9000-busterY)*(9000-busterY)) < RELEASE_RANGE)
                     {
                         cout << "RELEASE Releasing" << endl;
                         personalScore++;
+                        safeTravel[i] = 0;
                         givenCommand = true;
                         continue;
                     }
                     else
                     {
-                        cout << "MOVE 16000 9000 Moving to base" << endl;
-                        givenCommand = true;
-                        continue;
+                        //go to the closest wall, and then go to base along the wall to try and avoid camps
+                        if(turn > 50 && !safeTravel[i])
+                        {
+                            if(distToBottomWall < distToRightWall)
+                            {
+                                if(busterX == 8000 && busterY == 9000)
+                                {
+                                    safeTravel[i] = 1;
+                                }
+                                cout << "MOVE 8000 9000" << endl;
+                                givenCommand = true;
+                                continue;                                
+                            }
+                            else
+                            {
+
+                                if(busterX == 16000 && busterY == 2500)
+                                {
+                                    safeTravel[i] = 1;
+                                }                                
+                                cout << "MOVE 16000 2500" << endl;
+                                givenCommand = true;
+                                continue;                                
+                            }
+                        }
+                        else
+                        {
+                            cout << "MOVE 16000 9000 Moving to base" << endl;
+                            givenCommand = true;
+                            continue;
+                        }
                     }
                 }
             }
@@ -151,7 +222,9 @@ int main()
                 
                 float dist = sqrt((enemyX-busterX)*(enemyX-busterX) + (enemyY-busterY)*(enemyY-busterY));
                 
-                if(!usedStun[i] && enemyState == 1 && dist < MAX_STUN_RANGE)
+                //Change this to  re-implement stunning only when the enemy has a ghost
+                // && enemyState == 1
+                if(!usedStun[i] && (enemyState == 1 || enemyState == 0) && dist < MAX_STUN_RANGE)
                 {
                     usedStun[i] = 20;
                     cout << "STUN " << enemyId << " Stunning enemy " << enemyId << endl;
@@ -162,7 +235,7 @@ int main()
                 else if(usedStun[i] < 5 && enemyState == 1)
                 {
                     cout << "MOVE " << enemyX << " " << enemyY << " Chasing enemy to stun" << endl;
-                    cerr << "Chsed for " << chaseTime[i] << " turns" << endl;
+                    cerr << "Chased for " << chaseTime[i] << " turns" << endl;
                     chaseTime[i]++;
                     givenCommand = true;
                     break;
@@ -176,19 +249,7 @@ int main()
             }
             
             //next go for ghosts first based on stamina strength
-         //   for(int j = 0; j < ghostInfo.size();j++)
-         //   {
-          //      cerr << "pre sorted ghosts" << endl;
-           //     cerr << ghostInfo[j][0] << " " << ghostInfo[j][1] << " " << ghostInfo[j][2] << " " << ghostInfo[j][3] << " "<< ghostInfo[j][4] << endl;
-           // }
-            
             sort(ghostInfo.begin(), ghostInfo.end(), [](const std::vector< int >& a, const std::vector< int >& b){ return a[3] < b[3]; } );
-            
-         //   for(int j = 0; j < ghostInfo.size();j++)
-         //   {
-         //       cerr << "post sorted ghosts" << endl;
-           //     cerr << ghostInfo[j][0] << " " << ghostInfo[j][1] << " " << ghostInfo[j][2] << " " << ghostInfo[j][3] << " "<< ghostInfo[j][4] << endl;
-            //}
             
             for(int j = 0; j < ghostInfo.size();j++)
             {
