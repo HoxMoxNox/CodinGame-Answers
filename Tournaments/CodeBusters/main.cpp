@@ -129,9 +129,9 @@ int main()
             bool givenCommand = false;
             
             //use first few turns to venture out
-            if(turn < 7)
+            if(turn < 8)
             {
-                double degreeFromBase = atan2(0-busterY,0-busterX);
+                double degreeFromBase = atan2(9000*myTeamId-busterY,16000*myTeamId-busterX);
                 double degreeToMove = degreeFromBase + PI;
                 int moveX = busterX + (int)(800 * cos(degreeToMove));
                 int moveY = busterY + (int)(800 * sin(degreeToMove));
@@ -156,13 +156,33 @@ int main()
                 //First check for and run away from enemies
                 for (int p = 0; p < enemyInfo.size(); p++)
                 {
+                    int enemyId = enemyInfo[p][0];
                     int enemyX = enemyInfo[p][1];
                     int enemyY = enemyInfo[p][2];
+                    int enemyState = enemyInfo[p][3];
                     int distToCurrentEnemy = sqrt((enemyX-busterX)*(enemyX-busterX) + (enemyY-busterY)*(enemyY-busterY));
-                    if(distToCurrentEnemy <= 2200) 
+                    float angleToEnemy = atan2(enemyY-busterY,enemyX-busterX);
+                    
+                    if(!usedStun[i])
+                    {
+                        if(distToCurrentEnemy > 1760)
+                        {
+                            double angleToMove = angleToEnemy + PI;
+                            int moveX = busterX + (int)(300 * cos(angleToMove));
+                            int moveY = busterY + (int)(300 * sin(angleToMove));
+                        }
+                        else
+                        {
+                            cout << "STUN " << enemyId << endl;
+                            usedStun[i] = 20;
+                            givenCommand = true;
+                            break;
+                        }
+                    }
+                    else if(distToCurrentEnemy <= 2200 && enemyState != 2) 
                     {
                         //Run away from enemy
-                        float angleToEnemy = atan2(enemyY-busterY,enemyX-busterX);
+                        
                         double angleToMove = angleToEnemy + PI;
                         int moveX = busterX + (int)(800 * cos(angleToMove));
                         int moveY = busterY + (int)(800 * sin(angleToMove));
@@ -177,7 +197,22 @@ int main()
                     continue;
                 }  
                 
-                if(myTeamId == 0)
+                if(sqrt((16000*myTeamId-busterX)*(16000*myTeamId-busterX) + (9000*myTeamId-busterY)*(9000*myTeamId-busterY)) < RELEASE_RANGE)
+                {
+                    cout << "RELEASE Releasing" << endl;
+                    personalScore++;
+                    safeTravel[i] = 0;
+                    givenCommand = true;
+                    continue;
+                }   
+                else
+                {
+                    cout << "MOVE " << 16000*myTeamId << " " <<  myTeamId * 9000 << " Moving to base" << endl;
+                    givenCommand = true;
+                    continue;
+                }
+                
+                /*if(myTeamId == 0)
                 {
                     float distToTopWall = sqrt((8000 - busterX) * (8000 - busterX) + (0 - busterY) * (0 - busterY));
                     float distToLeftWall = sqrt((0 - busterX) * (0 - busterX) + (6500 - busterY) * (6500 - busterY));
@@ -272,7 +307,7 @@ int main()
                             continue;
                         }
                     }
-                }
+                }*/
             }
             
             if(givenCommand)
@@ -303,7 +338,7 @@ int main()
                     chaseTime[i] = 0;
                     break;
                 }
-                else if(usedStun[i] < 5 && enemyState == 1)
+                else if(usedStun[i] < 5 && enemyState == 1 && dist < MAX_STUN_RANGE)
                 {
                     cout << "MOVE " << enemyX << " " << enemyY << " Chasing enemy to stun" << endl;
                     cerr << "Chased for " << chaseTime[i] << " turns" << endl;
@@ -320,10 +355,10 @@ int main()
             }
             
             //next go for ghosts first based on stamina strength
-            //sort(ghostInfo.begin(), ghostInfo.end(), [](const std::vector< int >& a, const std::vector< int >& b){ return a[3] < b[3]; } );
-            sort(ghostInfo.begin(), ghostInfo.end(),[busterX,busterY](const std::vector< int >& a, const std::vector< int >& b){ 
-	            return sqrt( (busterX - a[1])*(busterX - a[1]) + (busterY - a[2])*(busterY - a[2])) <
-	            sqrt( (busterX - b[1])*(busterX - b[1]) + (busterY - b[2])*(busterY - b[2]));} );
+            sort(ghostInfo.begin(), ghostInfo.end(), [](const std::vector< int >& a, const std::vector< int >& b){ return a[3] < b[3]; } );
+            //sort(ghostInfo.begin(), ghostInfo.end(),[busterX,busterY](const std::vector< int >& a, const std::vector< int >& b){ 
+	          //  return sqrt( (busterX - a[1])*(busterX - a[1]) + (busterY - a[2])*(busterY - a[2])) <
+	           // sqrt( (busterX - b[1])*(busterX - b[1]) + (busterY - b[2])*(busterY - b[2]));} );
             // cerr << "Current Buster: " << i << endl;
             for(int j = 0; j < ghostInfo.size();j++)
             {
