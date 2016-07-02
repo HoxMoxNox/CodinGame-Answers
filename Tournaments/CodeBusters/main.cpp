@@ -20,8 +20,8 @@ int main()
     cin >> ghostCount; cin.ignore();
     int myTeamId; // if this is 0, your base is on the top left of the map, if it is 1, on the bottom right
     cin >> myTeamId; cin.ignore();
-    
-    const int BASE_X = 16000 * myTeamId;
+
+	const int BASE_X = 16000 * myTeamId;
     const int BASE_Y = 9000 * myTeamId;
     
     const int MAX_SPEED = 800;
@@ -30,7 +30,8 @@ int main()
     const int MAX_BUST_RANGE = 1760;
     const int RELEASE_RANGE = 1600;
     const int MAX_STUN_RANGE = 1760;
-    const int MAX_VISIBLE_RANGE = 2200;
+    
+	const int MAX_VISIBLE_RANGE = 2200;
     
     const int TURNS_TO_EXPLORE = 8;
     
@@ -41,7 +42,7 @@ int main()
     int usedStun[] = {0,0,0,0,0};
     
     //memory for seen ghosts
-    map< int, pair<int, int> >potentialGhostLocations;
+	map< int, pair<int, int> >potentialGhostLocations;
     
     //turn counter
     int turn = 0;
@@ -87,10 +88,10 @@ int main()
             }
             else if(entityType == -1)
             {
-                pair<int, int>coords;
+	            pair<int, int>coords;
                 coords.first = x;
                 coords.second = y;
-                potentialGhostLocations[entityId] = coords;
+                potentialGhostLocations[entityId] = coords;                
                 ghostInfo.push_back(currentInfo);             
             }
             else
@@ -108,89 +109,22 @@ int main()
             {
                 usedStun[i]--;
             }
-            //cerr << "Current Buster: " << i << endl;
-            //cerr << "   stun cooldown turn: " << usedStun[i] << endl;
-            //cerr << "Position of buster " << busterInfo[0][0] << "is" << busterInfo[0][1] << " " << busterInfo[0][2] << endl;
+
             int busterX = busterInfo[i][1];
             int busterY = busterInfo[i][2];
         
             bool givenCommand = false;
 
-            //use first few turns to venture out
-            if(turn < TURNS_TO_EXPLORE)
-            {
-                double degreeFromBase = atan2(BASE_Y-busterY,BASE_X-busterX);
-                double degreeToMove = degreeFromBase + PI;
-                int moveX = busterX + (int)(MAX_SPEED * cos(degreeToMove));
-                int moveY = busterY + (int)(MAX_SPEED * sin(degreeToMove));
-                cout << "MOVE " << moveX << " " << moveY << " Moving from base" << endl;
-                givenCommand = true;
-                continue;
-             }     
-
             //first checking if the buster has a ghost, if he does, send him to the base to release it
             // Add a safe travel by sending the buster to an edge then to the base, after a certain # of turns
             if(busterInfo[i][3] == 1)
             {
-                
-                //First check for and run away from enemies
-                for (int p = 0; p < enemyInfo.size(); p++)
-                {
-                    int enemyId = enemyInfo[p][0];
-                    int enemyX = enemyInfo[p][1];
-                    int enemyY = enemyInfo[p][2];
-                    int enemyState = enemyInfo[p][3];
-                    int distToCurrentEnemy = sqrt((enemyX-busterX)*(enemyX-busterX) + (enemyY-busterY)*(enemyY-busterY));
-                    float angleToEnemy = atan2(enemyY-busterY,enemyX-busterX);
-                    
-                    if(!usedStun[i] && distToCurrentEnemy < MAX_STUN_RANGE)
-                    {
-                            cout << "STUN " << enemyId << endl;
-                            usedStun[i] = 20;
-                            givenCommand = true;
-                            break;
-                    }
-                    else if(distToCurrentEnemy <= MAX_VISIBLE_RANGE && enemyState != 2) 
-                    {
-                        //Run away from enemy
-                        double angleToMove = angleToEnemy + PI;
-                        int moveX = busterX + (int)(MAX_SPEED * cos(angleToMove));
-                        int moveY = busterY + (int)(MAX_SPEED * sin(angleToMove));
-                        cout << "MOVE " << moveX << " " << moveY << " Running away!" << endl;
-                        givenCommand = true;
-                        break;
-                    }
-                }  
-                    
-                if(givenCommand)
-                {
-                    continue;
-                }                
-                
-                if(sqrt((BASE_X-busterX)*(BASE_X-busterX)+(BASE_Y-busterY)*(BASE_Y-busterY)) < RELEASE_RANGE)
-                {
-                    cout << "RELEASE Releasing" << endl;
-                    personalScore++;
-                    safeTravel[i] = 0;
-                    givenCommand = true;
-                    continue;
-                }
-                else
-                {
-                    cout << "MOVE " << BASE_X << " " << BASE_Y << " Moving to base" << endl;
-                    givenCommand = true;
-                    continue;
-                }
-                
-           /*     
                 if(myTeamId == 0)
                 {
-                    int topX = 4500;
-                    int topY = 0;
                     float distToTopWall = sqrt((8000 - busterX) * (8000 - busterX) + (0 - busterY) * (0 - busterY));
                     float distToLeftWall = sqrt((0 - busterX) * (0 - busterX) + (6500 - busterY) * (6500 - busterY));
                     
-                    if(sqrt( (0 - busterX) * (0 - busterX) + (0 - busterY) * (0 - busterY) ) < RELEASE_RANGE)
+                    if(sqrt( (BASE_X - busterX) * (BASE_X - busterX) + (BASE_Y - busterY) * (BASE_Y - busterY) ) < RELEASE_RANGE)
                     {
                         cout << "RELEASE Releasing" << endl;
                         personalScore++;
@@ -238,7 +172,7 @@ int main()
                     float distToBottomWall = sqrt((8000 - busterX) * (8000 - busterX) + (9000 - busterY) * (9000 - busterY));
                     
                     
-                    if(sqrt((16000-busterX)*(16000-busterX) + (9000-busterY)*(9000-busterY)) < RELEASE_RANGE)
+                    if(sqrt((BASE_X-busterX)*(BASE_X-busterX) + (BASE_Y-busterY)*(BASE_Y-busterY)) < RELEASE_RANGE)
                     {
                         cout << "RELEASE Releasing" << endl;
                         personalScore++;
@@ -280,7 +214,7 @@ int main()
                             continue;
                         }
                     }
-                }*/
+                }
             }
             
             if(givenCommand)
@@ -308,14 +242,14 @@ int main()
                     usedStun[i] = 20;
                     cout << "STUN " << enemyId << " Stunning enemy " << enemyId << endl;
                     givenCommand = true;
-                    chaseTime[i] = 0;
+                    //chaseTime[i] = 0;
                     break;
                 }
-                else if(usedStun[i] < 5 && enemyState == 1 && dist < 1800)
+                else if(usedStun[i] < 5 && enemyState == 1 && dist < MAX_STUN_RANGE + 40)
                 {
                     cout << "MOVE " << enemyX << " " << enemyY << " Chasing enemy to stun" << endl;
-                    cerr << "Chased for " << chaseTime[i] << " turns" << endl;
-                    chaseTime[i]++;
+                    //cerr << "Chased for " << chaseTime[i] << " turns" << endl;
+                    //chaseTime[i]++;
                     givenCommand = true;
                     break;
                 }
@@ -366,7 +300,7 @@ int main()
                     break;
                     }
                 }
-                else if(dist < MIN_BUST_RANGE)
+	            else if(dist < MIN_BUST_RANGE)
                 {
                     float angleFromGhost = atan2(ghostY-busterY,ghostX-busterX);
                     int moveX = busterX + (int)(459*cos(angleFromGhost + PI)); //459 because ghosts can be at 899 and are too close
@@ -382,7 +316,7 @@ int main()
                     cout << "MOVE " << moveX << " " << moveY << " repositioning to bust" << endl;// we'd have to chase them again, so this means at most
                     givenCommand = true;                             // the ghost will be 1759 units away after this move
                     break;
-                }                
+                }                   
                 
             }
             
@@ -391,8 +325,7 @@ int main()
                 continue;
             }
             
-            
-            //Check the potential ghost locations
+		    //Check the potential ghost locations
             for(map<int, pair<int,int> >::iterator it = potentialGhostLocations.begin(); it != potentialGhostLocations.end(); ++it)
             {
                 int ghostId = it->first;
@@ -414,12 +347,11 @@ int main()
                 givenCommand = true;
                 break;
             }
-
             
             if(givenCommand)
             {
                 continue;
-            }
+            }            
             
             //if no command is given yet, camp the enemy grounds and set patrol points
             if(!givenCommand)
@@ -431,18 +363,18 @@ int main()
                     {
                         if(patrolModes[i] == 0)
                         {
-                            cout << "MOVE 14000 9000 Camp" << endl;
-                            if(busterX == 14000 && busterY == 9000)
+                            cout << "MOVE 12000 7800 Camp" << endl;
+                            if(busterX == 12000 && busterY == 7800)
                             {
                                 patrolModes[i] = 1;
                             }
                         }
                         else if(patrolModes[i] == 1)
                         {
-                            cout << "MOVE 16000 8000 Camp" << endl;
-                            if(busterX == 16000 && busterY == 7000)
+                            cout << "MOVE 13500 6500 Camp" << endl;
+                            if(busterX == 13500 && busterY == 6500)
                             {
-                                patrolModes[i] = 0;
+                                patrolModes[i] = 2;
                             }
                         }
                         else if(patrolModes[i] == 2)
@@ -554,18 +486,18 @@ int main()
                     {
                         if(patrolModes[i] == 0)
                         {
-                            cout << "MOVE 0 2000 Camp" << endl;
-                            if(busterX == 0 && busterY == 2000)
+                            cout << "MOVE 2800 1200 Camp" << endl;
+                            if(busterX == 2800 && busterY == 1200)
                             {
                                 patrolModes[i] = 1;
                             }
                         }
                         else if(patrolModes[i] == 1)
                         {
-                            cout << "MOVE 2000 0 Camp" << endl;
-                            if(busterX == 2000 && busterY == 0)
+                            cout << "MOVE 2500 2500 Camp" << endl;
+                            if(busterX == 2500 && busterY == 2500)
                             {
-                                patrolModes[i] = 0;
+                                patrolModes[i] = 2;
                             }
                         }
                         else if(patrolModes[i] == 2)
@@ -575,7 +507,7 @@ int main()
                             {
                                 patrolModes[i] = 0;
                             }
-                        }                     
+                        }                        
                     }
                     //patroller
                     else if(i == 1)
