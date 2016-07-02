@@ -30,8 +30,14 @@ int main()
     //a stun timer for each potential buster
     int usedStun[] = {0,0,0,0,0};
     
+    //Movement modes, 0 for normal movement, 1 for going to meet another buster to take down
+    // a ghost with a lot of stamina, 
+    
+    //keep track of # of personal busters at a certain ghost
+    map<int, int >bustersAtGhost;
+    
     //memory for seen ghosts
-    vector< vector<int> >potentialGhostLocations;
+    map<int, pair<int, int> >potentialGhostLocations;
     
     //turn counter
     int turn = 0;
@@ -76,11 +82,11 @@ int main()
             if(entityType == myTeamId)
             {
                 busterInfo.push_back(currentInfo);
-                
             }
             else if(entityType == -1)
             {
-                ghostInfo.push_back(currentInfo);             
+                ghostInfo.push_back(currentInfo);
+                bustersAtGhost[entityId] = 0;
             }
             else
             {
@@ -105,8 +111,30 @@ int main()
 
             //first checking if the buster has a ghost, if he does, send him to the base to release it
             // Add a safe travel by sending the buster to an edge then to the base, after a certain # of turns
+            // attack a nearby opponent before he can attack me in order to protect my ghost
             if(busterInfo[i][3] == 1)
             {
+                //First check for nearby opponents
+            /*    for(int p = 0; p < enemyInfo.size(); p++)
+                {
+                    int enemyX = enemyInfo[p][1];
+                    int enemyY = enemyInfo[p][2];
+                    int enemyId = enemyInfo[p][0];
+                    int distBusterAndEnemy = sqrt((enemyX-busterX)*(enemyX-busterX) + (enemyY-busterY)*(enemyY-busterY));
+                    if(distBusterAndEnemy < MAX_STUN_RANGE && !usedStun[i])
+                    {
+                        cout << "STUN " << enemyId << endl;
+                        usedStun[i] = 20;
+                        givenCommand = true;
+                        break;
+                    }
+                }
+                
+                if(givenCommand)
+                {
+                    continue;
+                }*/
+                
                 if(myTeamId == 0)
                 {
                     float distToTopWall = sqrt((8000 - busterX) * (8000 - busterX) + (0 - busterY) * (0 - busterY));
@@ -233,11 +261,11 @@ int main()
                     chaseTime[i] = 0;
                     break;
                 }
-                else if(usedStun[i] < 5 && enemyState == 1)
+                else if(usedStun[i] < 8 && enemyState == 1)
                 {
+                    chaseTime[i]++;
                     cout << "MOVE " << enemyX << " " << enemyY << " Chasing enemy to stun" << endl;
                     cerr << "Chased for " << chaseTime[i] << " turns" << endl;
-                    chaseTime[i]++;
                     givenCommand = true;
                     break;
                 }
@@ -249,35 +277,41 @@ int main()
                 continue;
             }
             
-            //next go for ghosts first based on stamina strength
-            sort(ghostInfo.begin(), ghostInfo.end(), [](const std::vector< int >& a, const std::vector< int >& b){ return a[3] < b[3]; } );
-            
+            //figure out closest ghost, then compare on stamina
+            //next go for ghosts first based on stamina strength (PROBABLY NOT, WILL INSTEAD GO FOR CLOSEST FOR NOW)
+            //sort(ghostInfo.begin(), ghostInfo.end(), [](const std::vector< int >& a, const std::vector< int >& b){ return a[3] < b[3]; } );
+            sort(ghostInfo.begin(), ghostInfo.end(),[busterX,busterY](const std::vector< int >& a, const std::vector< int >& b){ 
+	            return sqrt( (busterX - a[0])*(busterX - a[0]) + (busterY - a[1])*(busterY - a[1])) <
+	            sqrt( (busterX - b[0])*(busterX - b[0]) + (busterY - b[1])*(busterY - b[1]));} );
             for(int j = 0; j < ghostInfo.size();j++)
             {
                 int ghostId = ghostInfo[j][0];
                 int ghostX = ghostInfo[j][1];
                 int ghostY = ghostInfo[j][2];
-                bool isBustedGhost = false;
+                int ghostStamina = ghostInfo[j][3];
+                int ghostVal = ghostInfo[j][4]; //total number of busters trying to bust
+                int enemiesAtGhost = (ghostVal - bustersAtGhost[ghostId]);
                 float dist = sqrt((ghostX-busterX)*(ghostX-busterX) + (ghostY-busterY)*(ghostY-busterY));
                 
-                //check that no other buster already has this ghost
-                for (int i = 0; i < bustersPerPlayer; i++)
-                {
-                    if(busterInfo[i][4] == ghostId)
-                    {
-                        isBustedGhost = true;
-                        break;
-                    }
-                }
                 //then check if the ghost is within range and BUST
-                if(dist > MIN_BUST_RANGE && dist < MAX_BUST_RANGE)
+                //Also check if we have enough ghosts to overtake an opposing buster
+                //Also check that only one buster is at a ghost so that
+                //      we can divide and conquer is not currently opposed
+                if(dist > MIN_BUST_RANGE && dist < MAX_BUST_RANGE && 
+                      ( (bustersAtGhost[ghostId] == 0) 
+                        || ( bustersAtGhost[ghostId] <= 2 && ghostStamina >= 20 )
+                        || enemiesAtGhost >= bustersAtGhost[ghostId]))
                 {
                     cout << "BUST " << ghostId << " Busting ghost " << ghostId << endl;
+                    bustersAtGhost[ghostId]++;
                     givenCommand = true;
                     break;
                 }
                 //if the ghost is not within range, chase it, MOVE to it
-                else if (dist > MAX_BUST_RANGE)
+                else if (dist > MAX_BUST_RANGE &&
+                      ( (bustersAtGhost[ghostId] == 0) 
+                        || ( bustersAtGhost[ghostId] <= 2 && ghostStamina >= 20 )
+                        || enemiesAtGhost >= bustersAtGhost[ghostId]))                
                 {
                     //Have one constant camper that only moves for nearby ghosts
                     if(i != 0 || (i == 0 && dist < 4500))
@@ -567,6 +601,7 @@ int main()
                     }
                 }
             }
+            
         }
     }
 }
