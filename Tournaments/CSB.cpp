@@ -8,7 +8,7 @@
 using namespace std;
 
 
-pair<int,int> rotateMat(pair<int,int>ship, pair<int,int> checkpoint int angle);
+pair<int,int> rotateMat(pair<int,int>ship, pair<int,int>checkpoint, int angle);
 int turnsToNextCheckpoint(pair<int,int> checkpoint, pair<int,int>ship, int dx, int dy);
 /**
  * Auto-generated code below aims at helping you parse
@@ -23,10 +23,14 @@ int main()
     bool boosted = false;
     bool lapped = false;
     vector< pair<int,int> > storedCheckpoints;
+    vector< pair<int,int> >::iterator checkPointIT;
+    pair<int,int> nextNextCheckpoint;
+    int nextNextCheckpointIndex = 0;
+    int storedCheckpointsSize = 0;
     pair<int,int>MID_MAP(8000,4500);
     
-    //perhaps track acceleration?
-    //int ddy,ddx,pprevX,pprevY;
+    
+    int angle;
     
     int dx = 0;
     int dy = 0; // velocity trackers
@@ -52,8 +56,8 @@ int main()
             dy = y  - prevY;
         }
         
-        int thrust;
-        int epsilon = 2;
+        int thrust = 100;
+        int epsilon = 4;
         int delta = 10;
         
         
@@ -61,7 +65,25 @@ int main()
         pair<int,int> dest(nextCheckpointX, nextCheckpointY);
         pair<int,int>ship(x,y);
         
+        //Storing checkpoints to prempt them in the future instead of MID_MAP
+        if(!lapped && find(storedCheckpoints.begin(), storedCheckpoints.end(), currentCheckpoint) != storedCheckpoints.end() )
+        {
+            storedCheckpoints.push_back(currentCheckpoint);
+            storedCheckpointsSize++;
+        }
+        else
+        {
+            lapped = true;
+        }
+        
+        if(lapped)
+        {
+            nextNextCheckpointIndex++;
+            nextNextCheckpoint = storedCheckpoints[nextNextCheckpointIndex % storedCheckpointsSize];
+        }
+        
         int turnsToCP = turnsToNextCheckpoint(currentCheckpoint,ship,dx,dy);
+        cerr << "Turns to next checkpoint " << turnsToCP << endl;
         
         double angleToEnemy = atan2(opponentY - y, opponentX - x);
         double distToEnemy = sqrt( (opponentX - x) * (opponentX - x) + (opponentY - y) * (opponentY - y) );
@@ -69,6 +91,46 @@ int main()
         
         
         
+        //cout << newDest.first << " " << newDest.second << " 100 100" << endl;
+        if(!boosted && nextCheckpointDist < 6000 && abs(nextCheckpointAngle) < 5)
+        {
+            boosted = true;
+            thrust = -1;
+        }
+        else if(turnsToCP < epsilon)
+        {
+            
+            thrust = 0;
+            
+            if(!lapped)
+            {
+                dest = MID_MAP;
+            }
+            else
+            {
+                dest = nextNextCheckpoint;
+            }
+            
+        }
+        else if(nextCheckpointAngle > 5)
+        {
+            angle = 10;
+            dest = rotateMat(ship,currentCheckpoint,angle);
+        }
+        else if (nextCheckpointAngle < -5)
+        {
+            angle = -10;
+            dest = rotateMat(ship,currentCheckpoint,angle);
+        }
+        
+        if(thrust < 0)
+        {
+            cout << dest.first << " " << dest.second << " BOOST BOOST" << endl;
+        }
+        else
+        {
+            cout << dest.first << " " << dest.second << " " << thrust << " " << thrust << endl;
+        }
         
         turn++;
         prevX = x;
@@ -77,9 +139,10 @@ int main()
 }
 
 //This uses an AFFINE transformation, not a LINEAR transformation
+//give angle in degrees
 pair<int,int> rotateMat(pair<int,int> ship, pair<int,int> checkpoint, int angle)
 {
-    vector<int> rotatedCoords;
+    pair<int,int> rotatedCoords;
     vector<int> rotatedCheckpoint;
     vector<int> rotatedShip;
 
@@ -88,47 +151,23 @@ pair<int,int> rotateMat(pair<int,int> ship, pair<int,int> checkpoint, int angle)
     rotateMatrix[0][1] = -sin( (angle*PI) / 180 );
     rotateMatrix[1][0] = sin( (angle*PI) / 180 );
     rotateMatrix[1][1] = cos( (angle*PI) / 180 );
-    
     int x = ship.first;
     int y = ship.second;
-    
-    cerr << "Ship coords: " << x << " " << y << endl;
-    
+    //cerr << "Ship coords;
     int cx = checkpoint.first;
     int cy = checkpoint.second;
     
-    cerr << "CP coords: " << cx << " " << cy << endl;
-    
-    cerr << "Angle to rotate about: " << angle << endl;
-    
-    cerr << "Rotation Matrix: " << rotateMatrix[0][0] << " " << rotateMatrix[0][1] << endl;
-    cerr << "                 " << rotateMatrix[1][0] << " " << rotateMatrix[1][1] << endl;
-    
-    cerr << "Affine transformation R(X) + Xs - R(Xs)" << endl;
-
+    //RX
     rotatedCheckpoint.push_back((int)(rotateMatrix[0][0] * cx + rotateMatrix[0][1] * cy));
     rotatedCheckpoint.push_back((int)(rotateMatrix[1][0] * cx + rotateMatrix[1][1] * cy));
     
-    cerr << "R(X): " << rotatedCheckpoint[0] << endl;
-    cerr << "      " << rotatedCheckpoint[1] << endl;
-    
+    //RXs
     rotatedShip.push_back((int)(rotateMatrix[0][0] * x + rotateMatrix[0][1] * y));
     rotatedShip.push_back((int)(rotateMatrix[1][0] * x + rotateMatrix[1][1] * y));
     
-    cerr << "R(Xs): " << rotatedShip[0] << endl;
-    cerr << "       " << rotatedShip[1] << endl;
-    
-    
-    cerr << "Xs:   " << x << endl;
-    cerr << "      " << y << endl;
-
-
+    //RX-RXs+Xs
     rotatedCoords.first = rotatedCheckpoint[0] - rotatedShip[0] + x;
     rotatedCoords.second = rotatedCheckpoint[1] - rotatedShip[1] + y;
-    
-    cerr << "R(X) + Xs - R(Xs): " << rotatedCoords.first << endl;
-    cerr << "                   " << rotatedCoords.second << endl;
-    
     return rotatedCoords;
     
 }
@@ -137,7 +176,7 @@ pair<int,int> rotateMat(pair<int,int> ship, pair<int,int> checkpoint, int angle)
 
 int turnsToNextCheckpoint(pair<int,int> checkpoint, pair<int,int>ship, int dx, int dy)
 {
-    int MAX_TURNS = 30;
+    int MAX_TURNS = 60;
     int CP_RADIUS = 600;
     int cx = checkpoint.first;
     int cy = checkpoint.second;
