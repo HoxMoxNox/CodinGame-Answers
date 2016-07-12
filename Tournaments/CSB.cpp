@@ -29,6 +29,8 @@ int main()
     int storedCheckpointsSize = 0;
     pair<int,int>MID_MAP(8000,4500);
     
+    pair<int,int>prevCheckpoint(0,0);
+    
     
     int angle;
     
@@ -57,7 +59,7 @@ int main()
         }
         
         int thrust = 100;
-        int epsilon = 4;
+        int epsilon = 2;
         int delta = 10;
         
         
@@ -66,12 +68,13 @@ int main()
         pair<int,int>ship(x,y);
         
         //Storing checkpoints to prempt them in the future instead of MID_MAP
-        if(!lapped && find(storedCheckpoints.begin(), storedCheckpoints.end(), currentCheckpoint) != storedCheckpoints.end() )
+        if(!lapped && prevCheckpoint != currentCheckpoint
+                && find(storedCheckpoints.begin(), storedCheckpoints.end(), currentCheckpoint) == storedCheckpoints.end() )
         {
             storedCheckpoints.push_back(currentCheckpoint);
             storedCheckpointsSize++;
         }
-        else
+        else if(find(storedCheckpoints.begin(), storedCheckpoints.end(), currentCheckpoint) != storedCheckpoints.end())
         {
             lapped = true;
         }
@@ -97,6 +100,10 @@ int main()
             boosted = true;
             thrust = -1;
         }
+        else if (abs(nextCheckpointAngle) > 90)
+        {
+            thrust = 0;
+        }
         else if(turnsToCP < epsilon)
         {
             
@@ -116,11 +123,19 @@ int main()
         {
             angle = 10;
             dest = rotateMat(ship,currentCheckpoint,angle);
+            if(nextCheckpointDist < 1000)
+            {
+                thrust = 20;
+            }
         }
         else if (nextCheckpointAngle < -5)
         {
             angle = -10;
             dest = rotateMat(ship,currentCheckpoint,angle);
+            if(nextCheckpointDist < 1000)
+            {
+                thrust = 20;
+            }            
         }
         
         if(thrust < 0)
@@ -135,6 +150,7 @@ int main()
         turn++;
         prevX = x;
         prevY = y;
+        prevCheckpoint = currentCheckpoint;
     }
 }
 
